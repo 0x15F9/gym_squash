@@ -1,39 +1,19 @@
 import pygame
 import random
-import numpy as np
-from ball import Ball
 import sys
+from enum import Enum
 
+from ball import Ball
+from paddle import Paddle
 
-class Paddle(pygame.Rect):
-    def __init__(self, velocity, left_key, right_key, *args, **kwargs):
-        self.velocity = velocity
-        self.left_key = left_key
-        self.right_key = right_key
-        super().__init__(*args, **kwargs)
-
-    def move_paddle(self, board_width):
-        keys_pressed = pygame.key.get_pressed()
-
-        if keys_pressed[self.left_key]:
-            if self.x > 0:
-                self.x -= self.velocity
-
-        if keys_pressed[self.right_key]:
-            if self.x + self.width < board_width:
-                self.x += self.velocity
-
-
-class Ball(pygame.Rect):
-    def __init__(self, velocity, *args, **kwargs):
-        self.velocity = velocity
-        self.angle = 0
-        super().__init__(*args, **kwargs)
-
-    def move_ball(self):
-        self.x += self.angle
-        self.y += self.velocity
-
+# Reward Mode
+# Collide   +1 on collision with wall
+# Tick      +1 per time tick
+# NONE      No score
+class Mode(Enum):
+    COLLIDE = 1
+    TICK = 2
+    NONE = 3
 
 class Squash:
     HEIGHT = 300
@@ -50,9 +30,12 @@ class Squash:
     PADDLE_VELOCITY = 5
 
     COLOUR = (255, 255, 255)
+    
+    SCORE = 0
 
-    def __init__(self):
+    def __init__(self, mode=Mode.COLLIDE):
         pygame.init()  # Start the pygame instance.
+        self.mode = mode # reward mode
 
         # Setup the screen
         self.screen = pygame.display.set_mode((self.WIDTH, self.HEIGHT))
@@ -66,6 +49,7 @@ class Squash:
             0,
             pygame.K_w,
             pygame.K_s,
+            True,
             0,
             self.PADDING,
             self.WIDTH,
@@ -76,6 +60,7 @@ class Squash:
             self.PADDLE_VELOCITY,
             pygame.K_LEFT,
             pygame.K_RIGHT,
+            False,
             (self.WIDTH - self.PADDLE_WIDTH) / 2,
             self.HEIGHT - self.PADDLE_HEIGHT - self.PADDING,
             self.PADDLE_WIDTH,
@@ -111,6 +96,9 @@ class Squash:
                 if ball.colliderect(paddle):
                     ball.velocity = -ball.velocity
                     ball.angle = random.randint(-self.BALL_VELOCITY, self.BALL_VELOCITY)
+                    if paddle.is_wall and self.mode == Mode.COLLIDE:
+                        self.SCORE += 1
+                        print(self.SCORE)
                     break
 
     def game_loop(self):
@@ -137,6 +125,9 @@ class Squash:
 
             pygame.display.flip()
             self.clock.tick(60)
+            if self.mode == Mode.TICK:
+                self.SCORE += 1
+                print(self.SCORE)
 
 
 if __name__ == '__main__':

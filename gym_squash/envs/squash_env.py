@@ -37,27 +37,26 @@ dimensions = {
 
 
 class Paddle(pygame.Rect):
-    def __init__(self, velocity, left_key, right_key, is_wall, *args, **kwargs):
+    def __init__(self, velocity, board_width, is_wall, *args, **kwargs):
         self.velocity = velocity
-        self.left_key = left_key
-        self.right_key = right_key
         self.is_wall = is_wall
+        self.board_width = board_width
         super().__init__(*args, **kwargs)
 
-    def move_paddle(self, board_width):
-        keys_pressed = pygame.key.get_pressed()
-
-        if keys_pressed[self.left_key]:
+    def move_paddle(self, dir):
+        if dir == 1:
             if self.x > 0:
                 self.x -= self.velocity
-
-        if keys_pressed[self.right_key]:
-            if self.x + self.width < board_width:
+        elif dir == 2:
+            if self.x + self.width < self.board_width:
                 self.x += self.velocity
 
 class SquashEnv(gym.Env):
     metadata = {'render.modes': ['human']}
     COLOUR = (255, 255, 255)
+    
+    # map to ACTION_MEANING for compatibility with ALE
+    actions = [0, 3, 4]
     
     def __init__(self, reward_mode=RewardMode.COLLIDE):
         # constants
@@ -67,19 +66,24 @@ class SquashEnv(gym.Env):
         self.PADDLE_W = dimensions['paddle_width']
         self.PADDLE_H = dimensions['paddle_height']
         self.BALL_SIZE = dimensions['ball_size']
-
+        
         # 
         pygame.init()
         self.reward_mode = reward_mode
         self.screen = pygame.display.set_mode((self.SCREEN_W, self.SCREEN_H))
         self.clock = pygame.time.Clock()
+        
+        # gym attributes
+        self.state = self.screen
+        self.action_space = spaces.Discrete(len(self.actions))
 
         self.reset()
         pass
     
     def step(self, action):
-        pass
-    
+        self.paddle.move_paddle(action)
+            
+        return self.state, 0, False, ""
     
     def reset(self):
         self.BALL_V = dimensions['ball_velocity']
@@ -87,8 +91,7 @@ class SquashEnv(gym.Env):
         
         self.paddle = Paddle(
             self.PADDLE_V,
-            pygame.K_LEFT,
-            pygame.K_RIGHT,
+            self.SCREEN_W,
             False,
             (self.SCREEN_W - self.PADDLE_W) / 2,
             self.SCREEN_H - self.PADDLE_H - self.PADDING,
@@ -103,3 +106,25 @@ class SquashEnv(gym.Env):
 
         pygame.display.flip()
         self.clock.tick(60)
+
+
+ACTION_MEANING = {
+    0: "NOOP",
+    1: "FIRE",
+    2: "UP",
+    3: "RIGHT",
+    4: "LEFT",
+    5: "DOWN",
+    6: "UPRIGHT",
+    7: "UPLEFT",
+    8: "DOWNRIGHT",
+    9: "DOWNLEFT",
+    10: "UPFIRE",
+    11: "RIGHTFIRE",
+    12: "LEFTFIRE",
+    13: "DOWNFIRE",
+    14: "UPRIGHTFIRE",
+    15: "UPLEFTFIRE",
+    16: "DOWNRIGHTFIRE",
+    17: "DOWNLEFTFIRE",
+}

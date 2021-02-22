@@ -50,6 +50,19 @@ class Paddle(pygame.Rect):
         elif dir == 2:
             if self.x + self.width < self.board_width:
                 self.x += self.velocity
+                
+
+class Ball(pygame.Rect):
+    def __init__(self, velocity, screen_width, screen_height, *args, **kwargs):
+        self.velocity = velocity
+        self.screen_width = screen_width
+        self.screen_height = screen_height
+        self.angle = 0
+        super().__init__(*args, **kwargs)
+
+    def move_ball(self):
+        self.x += self.angle
+        self.y += self.velocity
 
 class SquashEnv(gym.Env):
     metadata = {'render.modes': ['human']}
@@ -82,10 +95,30 @@ class SquashEnv(gym.Env):
     
     def step(self, action):
         self.paddle.move_paddle(action)
+        self.ball.move_ball()
+        reward = 0
+        done = False
+        
+        # check for collision
+        if self.ball.y <= 0:  # vertical extremes
+            self.ball.velocity = -self.ball.velocity  # mirror motion vertically
+            self.ball.angle = random.randint(-self.BALL_V, self.BALL_V) # randomize angle of reflection
+        elif self.ball.colliderect(self.paddle): # collision with paddle
+            self.ball.velocity = -self.ball.velocity  # mirror motion vertically
+            self.ball.angle = random.randint(-self.BALL_V, self.BALL_V) # randomize angle of reflection
+            if self.reward_mode == RewardMode.COLLIDE:
+                reward = 1
+        elif self.ball.x <= 0 or self.ball.x + self.BALL_SIZE >= self.SCREEN_W: # side walls
+            self.ball.angle = -self.ball.angle # mirror motion horizontally
+        elif self.ball.y + self.BALL_SIZE > self.paddle.y: # move beyond paddle
+            sys.exit()
+            done = True
             
-        return self.state, 0, False, ""
+        self.score += reward
+        return self.state, reward, done, ""
     
     def reset(self):
+        self.score = 0
         self.BALL_V = dimensions['ball_velocity']
         self.PADDLE_V = dimensions['paddle_velocity']
         
@@ -98,11 +131,21 @@ class SquashEnv(gym.Env):
             self.PADDLE_W,
             self.PADDLE_H
         )
+        
+        self.ball = Ball(
+            self.BALL_V, self.SCREEN_W, 
+            self.SCREEN_H - self.PADDLE_H - self.PADDING,
+            self.SCREEN_W / 2 - self.BALL_SIZE / 2,
+            self.SCREEN_H / 2 - self.BALL_SIZE / 2,
+            self.BALL_SIZE,
+            self.BALL_SIZE
+        )
 
     
     def render(self, mode="human", close=False):
         self.screen.fill((0, 0, 0))
         pygame.draw.rect(self.screen, self.COLOUR, self.paddle)
+        pygame.draw.rect(self.screen, self.COLOUR, self.ball)
 
         pygame.display.flip()
         self.clock.tick(60)

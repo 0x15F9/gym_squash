@@ -31,11 +31,11 @@ class SquashEnv(gym.Env):
         # 
         pygame.init()
         self.reward_mode = reward_mode
-        self.screen = pygame.display.set_mode((self.SCREEN_W, self.SCREEN_H))
+        self.display = pygame.display
+        self.screen = self.display.set_mode((self.SCREEN_W, self.SCREEN_H))
         self.clock = pygame.time.Clock()
         
         # gym attributes
-        self.state = self.screen
         self.action_space = spaces.Discrete(len(self.actions))
 
         self.reset()
@@ -62,8 +62,9 @@ class SquashEnv(gym.Env):
             sys.exit()
             done = True
             
+        self.state = pygame.surfarray.array2d(self.display.get_surface())
         self.score += reward
-        return self.state, reward, done, ""
+        return self.state, reward, done, {"score": self.score}
     
     def reset(self):
         self.score = 0

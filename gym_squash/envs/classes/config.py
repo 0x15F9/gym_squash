@@ -1,7 +1,7 @@
 dimensions = {
     # screen
-    'screen_width': 300,
-    'screen_height': 240,
+    'screen_width': 200,
+    'screen_height': 200,
     # paddle
     'paddle_width': 50,
     'paddle_height': 10,
@@ -10,7 +10,7 @@ dimensions = {
     'ball_size': 5,
     'ball_velocity': 5,
     # misc.
-    'padding': 10
+    'padding': 5
 }
 
 ACTION_MEANING = {

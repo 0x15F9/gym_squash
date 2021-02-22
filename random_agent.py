@@ -12,6 +12,7 @@ def random_agent(episodes=150):
         env.render()
         if done:
             break
+    # print(state.shape)
 
 if __name__ == '__main__':
     random_agent()

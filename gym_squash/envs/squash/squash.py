@@ -38,7 +38,8 @@ class Squash:
         self.mode = mode # reward mode
 
         # Setup the screen
-        self.screen = pygame.display.set_mode((self.WIDTH, self.HEIGHT))
+        self.display = pygame.display
+        self.screen = self.display.set_mode((self.WIDTH, self.HEIGHT))
         self.clock = pygame.time.Clock()
 
         # Create the player objects.

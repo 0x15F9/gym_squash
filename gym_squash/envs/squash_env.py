@@ -7,62 +7,10 @@ import random
 import sys
 from enum import Enum
 
-class RewardMode(Enum):
-
-    """Reward Mode
-    
-    - Collide   +1 on collision with wall
-    - Tick      +1 per time tick
-    - NONE      No score
-    """
-    COLLIDE = 1
-    TICK = 2
-    NONE = 3
-
-
-dimensions = {
-    # screen
-    'screen_width': 300,
-    'screen_height': 240,
-    # paddle
-    'paddle_width': 50,
-    'paddle_height': 10,
-    'paddle_velocity': 5,
-    # ball
-    'ball_size': 5,
-    'ball_velocity': 5,
-    # misc.
-    'padding': 10
-}
-
-
-class Paddle(pygame.Rect):
-    def __init__(self, velocity, board_width, is_wall, *args, **kwargs):
-        self.velocity = velocity
-        self.is_wall = is_wall
-        self.board_width = board_width
-        super().__init__(*args, **kwargs)
-
-    def move_paddle(self, dir):
-        if dir == 1:
-            if self.x > 0:
-                self.x -= self.velocity
-        elif dir == 2:
-            if self.x + self.width < self.board_width:
-                self.x += self.velocity
-                
-
-class Ball(pygame.Rect):
-    def __init__(self, velocity, screen_width, screen_height, *args, **kwargs):
-        self.velocity = velocity
-        self.screen_width = screen_width
-        self.screen_height = screen_height
-        self.angle = 0
-        super().__init__(*args, **kwargs)
-
-    def move_ball(self):
-        self.x += self.angle
-        self.y += self.velocity
+from gym_squash.envs.classes.ball import Ball
+from gym_squash.envs.classes.paddle import Paddle
+from gym_squash.envs.classes.reward import RewardMode
+from gym_squash.envs.classes.config import dimensions, ACTION_MEANING
 
 class SquashEnv(gym.Env):
     metadata = {'render.modes': ['human']}
@@ -149,25 +97,3 @@ class SquashEnv(gym.Env):
 
         pygame.display.flip()
         self.clock.tick(60)
-
-
-ACTION_MEANING = {
-    0: "NOOP",
-    1: "FIRE",
-    2: "UP",
-    3: "RIGHT",
-    4: "LEFT",
-    5: "DOWN",
-    6: "UPRIGHT",
-    7: "UPLEFT",
-    8: "DOWNRIGHT",
-    9: "DOWNLEFT",
-    10: "UPFIRE",
-    11: "RIGHTFIRE",
-    12: "LEFTFIRE",
-    13: "DOWNFIRE",
-    14: "UPRIGHTFIRE",
-    15: "UPLEFTFIRE",
-    16: "DOWNRIGHTFIRE",
-    17: "DOWNLEFTFIRE",
-}

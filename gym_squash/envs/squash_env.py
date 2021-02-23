@@ -14,13 +14,13 @@ from gym_squash.envs.classes.reward import RewardMode
 from gym_squash.envs.classes.config import dimensions, ACTION_MEANING
 
 class SquashEnv(gym.Env):
-    metadata = {'render.modes': ['human']}
+    metadata = {'render.modes': ['human', 'rgb_array']}
     COLOUR = (255, 255, 255)
     
     # map to ACTION_MEANING for compatibility with ALE
     actions = [0, 3, 4]
     
-    def __init__(self, reward_mode=RewardMode.COLLIDE):
+    def __init__(self, reward_mode=RewardMode.COLLIDE, enable_render=False):
         # constants
         self.PADDING = dimensions['padding']
         self.SCREEN_W = dimensions['screen_width']
@@ -29,12 +29,14 @@ class SquashEnv(gym.Env):
         self.PADDLE_H = dimensions['paddle_height']
         self.BALL_SIZE = dimensions['ball_size']
         
-        # 
-        pygame.init()
         self.reward_mode = reward_mode
-        self.display = pygame.display
-        self.screen = self.display.set_mode((self.SCREEN_W, self.SCREEN_H))
-        self.clock = pygame.time.Clock()
+        # pygame 
+        self.enable_render = enable_render
+        if enable_render:
+            pygame.init()
+            self.display = pygame.display
+            self.screen = self.display.set_mode((self.SCREEN_W, self.SCREEN_H))
+            self.clock = pygame.time.Clock()
         
         # gym attributes
         self.action_space = spaces.Discrete(len(self.actions))
@@ -43,7 +45,6 @@ class SquashEnv(gym.Env):
             shape=(self.SCREEN_H, self.SCREEN_W, 3),
             dtype=np.uint8)
         self.reset()
-        pass
     
     def step(self, action):
         self.paddle.move_paddle(action)
@@ -66,9 +67,8 @@ class SquashEnv(gym.Env):
             sys.exit()
             done = True
             
-        self.state = self.get_state()#pygame.surfarray.array2d(self.display.get_surface())
         self.score += reward
-        return self.state, reward, done, {"score": self.score}
+        return self.get_state(), reward, done, {"score": self.score}
     
     def reset(self):
         self.score = 0
@@ -96,14 +96,18 @@ class SquashEnv(gym.Env):
 
     
     def render(self, mode="human", close=False):
-        self.screen.fill((0, 0, 0))
-        pygame.draw.rect(self.screen, self.COLOUR, self.paddle)
-        pygame.draw.rect(self.screen, self.COLOUR, self.ball)
+        if self.enable_render:
+            self.screen.fill((0, 0, 0))
+            pygame.draw.rect(self.screen, self.COLOUR, self.paddle)
+            pygame.draw.rect(self.screen, self.COLOUR, self.ball)
 
-        pygame.display.flip()
-        self.clock.tick(60)
+            pygame.display.flip()
+            self.clock.tick(60)
+        else:
+            print("Render not enabled")
 
     def get_state(self):
-        state = np.fliplr(np.flip(np.rot90(pygame.surfarray.array3d(
-            pygame.display.get_surface()).astype(np.uint8))))
-        return state
+        surface = pygame.Surface((self.SCREEN_W, self.SCREEN_H))
+        pygame.draw.rect(surface, self.COLOUR, self.paddle)
+        pygame.draw.rect(surface, self.COLOUR, self.ball)
+        return pygame.surfarray.array3d(surface)

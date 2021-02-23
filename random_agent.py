@@ -7,7 +7,7 @@ numpy.set_printoptions(threshold=sys.maxsize)
 
 import cv2
 
-def random_agent(episodes=150):
+def random_agent(episodes=1):
     env = gym.make("squash-v0", enable_render=True)
     env.reset()
     env.render()

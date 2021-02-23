@@ -110,4 +110,5 @@ class SquashEnv(gym.Env):
         surface = pygame.Surface((self.SCREEN_W, self.SCREEN_H))
         pygame.draw.rect(surface, self.COLOUR, self.paddle)
         pygame.draw.rect(surface, self.COLOUR, self.ball)
-        return pygame.surfarray.array3d(surface)
+        rotated = pygame.transform.rotate(surface, 90)
+        return pygame.surfarray.array3d(rotated)

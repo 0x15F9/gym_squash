@@ -1,6 +1,10 @@
 import gym
 import gym_squash
 
+import sys
+import numpy
+numpy.set_printoptions(threshold=sys.maxsize)
+
 def random_agent(episodes=150):
     env = gym.make("squash-v0")
     env.reset()
@@ -12,7 +16,6 @@ def random_agent(episodes=150):
         env.render()
         if done:
             break
-    # print(state.shape)
 
 if __name__ == '__main__':
     random_agent()

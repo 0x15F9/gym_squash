@@ -2,6 +2,7 @@ import gym
 from gym import error, spaces, utils
 from gym.utils import seeding
 
+import numpy as np
 import pygame
 import random
 import sys
@@ -37,7 +38,10 @@ class SquashEnv(gym.Env):
         
         # gym attributes
         self.action_space = spaces.Discrete(len(self.actions))
-
+        self.observation_space = spaces.Box(
+            low=0, high=255, 
+            shape=(self.SCREEN_H, self.SCREEN_W, 3),
+            dtype=np.uint8)
         self.reset()
         pass
     
@@ -62,7 +66,7 @@ class SquashEnv(gym.Env):
             sys.exit()
             done = True
             
-        self.state = pygame.surfarray.array2d(self.display.get_surface())
+        self.state = self.get_state()#pygame.surfarray.array2d(self.display.get_surface())
         self.score += reward
         return self.state, reward, done, {"score": self.score}
     
@@ -98,3 +102,8 @@ class SquashEnv(gym.Env):
 
         pygame.display.flip()
         self.clock.tick(60)
+
+    def get_state(self):
+        state = np.fliplr(np.flip(np.rot90(pygame.surfarray.array3d(
+            pygame.display.get_surface()).astype(np.uint8))))
+        return state

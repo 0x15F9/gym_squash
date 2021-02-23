@@ -8,7 +8,7 @@ dimensions = {
     'paddle_velocity': 5,
     # ball
     'ball_size': 5,
-    'ball_velocity': 5,
+    'ball_velocity': 7, # set ball v > paddle v to allow losing
     # misc.
     'padding': 5
 }

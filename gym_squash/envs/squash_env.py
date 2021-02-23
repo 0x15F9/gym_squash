@@ -93,6 +93,8 @@ class SquashEnv(gym.Env):
             self.BALL_SIZE,
             self.BALL_SIZE
         )
+        
+        return self.get_state()
 
     
     def render(self, mode="human", close=False):
@@ -111,4 +113,4 @@ class SquashEnv(gym.Env):
         pygame.draw.rect(surface, self.COLOUR, self.paddle)
         pygame.draw.rect(surface, self.COLOUR, self.ball)
         rotated = pygame.transform.rotate(surface, 90)
-        return pygame.surfarray.array3d(rotated)
+        return pygame.surfarray.array2d(rotated)

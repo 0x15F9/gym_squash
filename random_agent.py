@@ -8,15 +8,15 @@ numpy.set_printoptions(threshold=sys.maxsize)
 import cv2
 
 def random_agent(episodes=1):
-    env = gym.make("squash-v0", enable_render=True)
+    env = gym.make("squash-v0", enable_render=False)
     env.reset()
     env.render()
     for e in range(episodes):
         action = env.action_space.sample()
         state, reward, done, _ = env.step(action)
         # print(reward, end=", ")
-        # print(state)
-        env.render()
+        print(state)
+        # env.render()
         if done:
             break
         

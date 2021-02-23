@@ -1,10 +1,10 @@
 dimensions = {
     # screen
-    'screen_width': 200,
-    'screen_height': 200,
+    'screen_width': 168,
+    'screen_height': 252,
     # paddle
-    'paddle_width': 50,
-    'paddle_height': 10,
+    'paddle_width': 30,
+    'paddle_height': 7,
     'paddle_velocity': 5,
     # ball
     'ball_size': 5,

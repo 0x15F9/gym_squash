@@ -2,8 +2,6 @@ import gym
 import gym_squash
 
 import sys
-import numpy
-numpy.set_printoptions(threshold=sys.maxsize)
 
 import cv2
 
@@ -15,7 +13,7 @@ def random_agent(episodes=1):
         action = env.action_space.sample()
         state, reward, done, _ = env.step(action)
         # print(reward, end=", ")
-        print(state)
+        print(state.shape)
         # env.render()
         if done:
             break

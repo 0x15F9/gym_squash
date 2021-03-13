@@ -1,16 +1,18 @@
 dimensions = {
     # screen
-    'screen_width': 168,
-    'screen_height': 252,
+    'screen_width': 160,
+    'screen_height': 210,
     # paddle
-    'paddle_width': 30,
-    'paddle_height': 7,
+    'paddle_width': 5,
+    'paddle_height': 15,
     'paddle_velocity': 5,
+    'top': 34,
+    'bottom': 194,
     # ball
     'ball_size': 5,
     'ball_velocity': 7, # set ball v > paddle v to allow losing
     # misc.
-    'padding': 5
+    'padding': 15
 }
 
 ACTION_MEANING = {

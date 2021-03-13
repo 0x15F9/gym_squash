@@ -3,10 +3,14 @@ from gym import error, spaces, utils
 from gym.utils import seeding
 
 import numpy as np
-import pygame
 import random
 import sys
 from enum import Enum
+
+# disable welcome message
+import os
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
+import pygame
 
 from gym_squash.envs.classes.ball import Ball
 from gym_squash.envs.classes.paddle import Paddle
@@ -14,22 +18,54 @@ from gym_squash.envs.classes.reward import RewardMode
 from gym_squash.envs.classes.config import dimensions, ACTION_MEANING
 
 class SquashEnv(gym.Env):
-    metadata = {'render.modes': ['human', 'rgb_array']}
+    metadata = {
+        'render.modes': ['human', 'rgb_array']
+    }
+    
     COLOUR = (255, 255, 255)
     
-    # map to ACTION_MEANING for compatibility with ALE
-    actions = [0, 3, 4]
+    atari_action_meaning = {
+        0: "NOOP",
+        1: "FIRE",
+        2: "UP",
+        3: "RIGHT",
+        4: "LEFT",
+        5: "DOWN",
+        6: "UPRIGHT",
+        7: "UPLEFT",
+        8: "DOWNRIGHT",
+        9: "DOWNLEFT",
+        10: "UPFIRE",
+        11: "RIGHTFIRE",
+        12: "LEFTFIRE",
+        13: "DOWNFIRE",
+        14: "UPRIGHTFIRE",
+        15: "UPLEFTFIRE",
+        16: "DOWNRIGHTFIRE",
+        17: "DOWNLEFTFIRE",
+    }
+      
+    action = [
+        0, # NOOP
+        2, # UP
+        5  # DOWN
+    ]
     
-    def __init__(self, reward_mode=RewardMode.COLLIDE, enable_render=False):
+    # For compatibility with atari games
+    def get_action_meanings(self):
+        return [self.atari_action_meaning[i] for i in self.action]
+    
+    def __init__(self, enable_render=False):
         # constants
-        self.PADDING = dimensions['padding']
-        self.SCREEN_W = dimensions['screen_width']
-        self.SCREEN_H = dimensions['screen_height']
-        self.PADDLE_W = dimensions['paddle_width']
-        self.PADDLE_H = dimensions['paddle_height']
-        self.BALL_SIZE = dimensions['ball_size']
+        self.PADDING = 15
+        self.SCREEN_W = 160
+        self.SCREEN_H = 210
+        self.PADDLE_W = 5
+        self.PADDLE_H = 15
+        self.BALL_SIZE = 5
+        self.TOP = 35
+        self.BOTTOM = 195
         
-        self.reward_mode = reward_mode
         # pygame 
         self.enable_render = enable_render
         if enable_render:
@@ -37,14 +73,40 @@ class SquashEnv(gym.Env):
             self.display = pygame.display
             self.screen = self.display.set_mode((self.SCREEN_W, self.SCREEN_H))
             self.clock = pygame.time.Clock()
-        
+
         # gym attributes
-        self.action_space = spaces.Discrete(len(self.actions))
+        self.action_space = spaces.Discrete(len(self.action))
         self.observation_space = spaces.Box(
-            low=0, high=255, 
+            low=0, high=1, 
             shape=(self.SCREEN_H, self.SCREEN_W, 3),
-            dtype=np.uint8)
+            dtype=np.uint8
+        )
         self.reset()
+        
+    def reset(self):
+        self.score = 0
+        self.BALL_V = 5
+        self.PADDLE_V = 3
+
+        self.paddle = Paddle(
+            self.PADDLE_V,
+            self.TOP,
+            self.BOTTOM,
+            self.SCREEN_W - self.PADDLE_W - self.PADDING,
+            (self.SCREEN_H - self.PADDLE_H) / 2,
+            self.PADDLE_W,
+            self.PADDLE_H
+        )
+
+        self.ball = Ball(
+            self.BALL_V,
+            (self.SCREEN_W - self.BALL_SIZE) / 2,
+            (self.SCREEN_H - self.BALL_SIZE) / 2,
+            self.BALL_SIZE,
+            self.BALL_SIZE
+        )
+
+        return self.get_state()
     
     def step(self, action):
         self.paddle.move_paddle(action)
@@ -53,49 +115,23 @@ class SquashEnv(gym.Env):
         done = False
         
         # check for collision
-        if self.ball.y <= 0:  # vertical extremes
+        if self.ball.x <= 0:  # wall collision
             self.ball.velocity = -self.ball.velocity  # mirror motion vertically
             self.ball.angle = random.randint(-self.BALL_V, self.BALL_V) # randomize angle of reflection
         elif self.ball.colliderect(self.paddle): # collision with paddle
             self.ball.velocity = -self.ball.velocity  # mirror motion vertically
             self.ball.angle = random.randint(-self.BALL_V, self.BALL_V) # randomize angle of reflection
-            if self.reward_mode == RewardMode.COLLIDE:
-                reward = 1
-        elif self.ball.x <= 0 or self.ball.x + self.BALL_SIZE >= self.SCREEN_W: # side walls
+            reward = 1
+        elif self.ball.y <= self.TOP or self.ball.y + self.BALL_SIZE >= self.BOTTOM: # vertical extremes
             self.ball.angle = -self.ball.angle # mirror motion horizontally
-        elif self.ball.y + self.BALL_SIZE > self.paddle.y: # move beyond paddle
-            sys.exit()
+        elif self.ball.x + self.BALL_SIZE > self.paddle.x: # move beyond paddle
+            # sys.exit()
             done = True
             
         self.score += reward
-        return self.get_state(), reward, done, {"score": self.score}
-    
-    def reset(self):
-        self.score = 0
-        self.BALL_V = dimensions['ball_velocity']
-        self.PADDLE_V = dimensions['paddle_velocity']
-        
-        self.paddle = Paddle(
-            self.PADDLE_V,
-            self.SCREEN_W,
-            False,
-            (self.SCREEN_W - self.PADDLE_W) / 2,
-            self.SCREEN_H - self.PADDLE_H - self.PADDING,
-            self.PADDLE_W,
-            self.PADDLE_H
-        )
-        
-        self.ball = Ball(
-            self.BALL_V, self.SCREEN_W, 
-            self.SCREEN_H - self.PADDLE_H - self.PADDING,
-            self.SCREEN_W / 2 - self.BALL_SIZE / 2,
-            self.SCREEN_H / 2 - self.BALL_SIZE / 2,
-            self.BALL_SIZE,
-            self.BALL_SIZE
-        )
-        
-        return self.get_state()
-
+        if self.score == 20:
+            done = True
+        return self.get_state(), reward, done, {"score": self.score, "ball_y": self.ball.y, "paddle_y": self.paddle.y}
     
     def render(self, mode="human", close=False):
         if self.enable_render:
@@ -112,5 +148,5 @@ class SquashEnv(gym.Env):
         surface = pygame.Surface((self.SCREEN_W, self.SCREEN_H))
         pygame.draw.rect(surface, self.COLOUR, self.paddle)
         pygame.draw.rect(surface, self.COLOUR, self.ball)
-        rotated = pygame.transform.rotate(surface, 90)
-        return pygame.surfarray.array3d(rotated)
+        # rotated = pygame.transform.rotate(surface, 90)
+        return np.swapaxes(pygame.surfarray.array2d(surface), 0, 1)

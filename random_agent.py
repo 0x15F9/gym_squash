@@ -7,7 +7,7 @@ import cv2
 import matplotlib.pyplot as plt
 
 def random_agent(episodes=1000):
-    env = gym.make("squash-v0", enable_render=True)
+    env = gym.make("squash-v0", enable_render=False)
     state = env.reset()
     env.render()
     
@@ -19,11 +19,11 @@ def random_agent(episodes=1000):
         bally = info["ball_y"]
         # print(e, reward, end=", ")
         # print(state.shape)
-        env.render()
+        # env.render()
         if done:
             print(e, done)
             break
-    
+    print(state.shape)
     plt.imshow(state)
     plt.show()
     # cv2.imshow("image", state)
